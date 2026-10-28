@@ -32,7 +32,14 @@ button.s{background:#fff;color:var(--n);border:1px solid var(--n)}button:disable
 <p class="t">จัดใบหน้าและไหล่ทั้งสองข้างให้อยู่ในกรอบ · ใช้ภาพเพื่อทะเบียนและบัตรประจำตัวชุมนุมเท่านั้น</p><div id="cb"></div></div></div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbx7RVg-BM2hCMQwa8ASLNrJoK4CBWZS4u9o46Vi4FwmpQstZNiO4XU88Wdcq2stcx8P/exec'; // ว่าง = รันใน Apps Script | ใส่ URL /exec เมื่อโฮสต์นอก (เช่น GitHub Pages)
-const run=(f,...a)=>API?fetch(API,{method:'POST',body:JSON.stringify({fn:f,args:a})}).then(r=>r.json()).then(j=>{if(j.err)throw new Error(j.err);return j.data;}):new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no)[f](...a));
+const gasRun=(f,a)=>new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no)[f](...a));
+const formRun=(f,a)=>new Promise((ok,no)=>{const id='r'+Math.random().toString(36).slice(2),fr=document.createElement('iframe'),fm=document.createElement('form'),inp=document.createElement('input');
+ fr.name=id;fr.style.display='none';fm.method='POST';fm.action=API;fm.target=id;fm.style.display='none';inp.type='hidden';inp.name='q';inp.value=JSON.stringify({id:id,fn:f,args:a});fm.appendChild(inp);
+ let t;const cl=()=>{clearTimeout(t);removeEventListener('message',h);fr.remove();fm.remove();};
+ const h=e=>{const d=e.data;if(d&&d.cid===id){cl();d.err?no(new Error(d.err)):ok(d.data);}};
+ t=setTimeout(()=>{cl();no(new Error('หมดเวลา ลองใหม่'));},90000);
+ addEventListener('message',h);document.body.append(fr,fm);fm.submit();});
+const run=(f,...a)=>API?formRun(f,a):gasRun(f,a);
 const $=i=>document.getElementById(i),M=$('m');
 let U,S,drafts={},timer,stream,shot,pend,AP,TU,TP,TN;
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
