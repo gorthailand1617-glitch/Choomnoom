@@ -38,11 +38,11 @@ let U,S,drafts={},timer,stream,shot,pend,AP,TU,TP,TN;
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function loginView(t){t=t||'s';M.innerHTML='<div class="card"><div class="row" style="margin:0 0 10px"><button class="'+(t=='s'?'':'s')+'" style="flex:1" onclick="loginView(\'s\')">นักเรียน</button><button class="'+(t=='t'?'':'s')+'" style="flex:1" onclick="loginView(\'t\')">ครู / แอดมิน</button></div>'+(t=='s'?'<p class="t">กรอกเลขประจำตัวนักเรียน 4 หลัก</p><input type="text" id="sid" inputmode="numeric" maxlength="5" placeholder="เช่น 9999" onkeydown="if(event.key==\'Enter\')doLogin()"><div class="row"><button style="flex:1" onclick="doLogin()">เข้าสู่ระบบ</button></div>':'<input type="text" id="tu" placeholder="ชื่อผู้ใช้ (Username)" autocapitalize="off" autocomplete="username"><div class="row"><input type="password" id="tp" placeholder="รหัสผ่าน" onkeydown="if(event.key==\'Enter\')tLogin()"></div><div class="row"><button style="flex:1" onclick="tLogin()">เข้าสู่ระบบ</button></div>')+'<p id="er" class="t" style="color:var(--r)"></p></div>';$('out').hidden=true;}
-async function doLogin(){const r=await run('login',$('sid').value);if(!r.ok){$('er').textContent='ไม่พบเลขประจำตัวนี้';return}
+async function doLogin(){$('er').textContent='กำลังตรวจสอบ…';let r;try{r=await run('login',$('sid').value);}catch(e){$('er').textContent='เชื่อมต่อระบบไม่ได้: '+(e.message||e);return}if(!r.ok){$('er').textContent='ไม่พบเลขประจำตัวนี้';return}
  U=r;$('out').hidden=false;await load();
  timer=setInterval(()=>{if($('cam').style.display!=='flex'&&!(document.activeElement&&document.activeElement.matches('input')))load()},15000);}
 function logout(){clearInterval(timer);U=AP=TU=TP=null;drafts={};loginView();}
-async function tLogin(){const u=$('tu').value.trim(),p=$('tp').value;const r=await run('teacherLogin',u,p);if(!r.ok){$('er').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';return}
+async function tLogin(){const u=$('tu').value.trim(),p=$('tp').value;$('er').textContent='กำลังตรวจสอบ…';let r;try{r=await run('teacherLogin',u,p);}catch(e){$('er').textContent='เชื่อมต่อระบบไม่ได้: '+(e.message||e);return}if(!r.ok){$('er').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';return}
  $('out').hidden=false;if(r.role=='admin'){AP=p;adm(await run('adminInfo',AP));}else{TU=u;TP=p;TN=r.name;tView();}}
 async function tView(){M.innerHTML='<div class="ban">'+esc(TN)+' <button class="s" style="float:right;padding:4px 10px" onclick="tView()">รีเฟรช</button></div><div id="tl">กำลังโหลด…</div>';
  const d=await run('teacherData',TU,TP);
